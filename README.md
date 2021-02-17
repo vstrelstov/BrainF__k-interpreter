@@ -25,7 +25,7 @@ Each of the above command represents a single operation.
 **Objective:**
 Given a valid BrainF__k program and an input string, you have to print the result of the program when executed. All those characters of the program which does not represent a valid command can be considered as comment and should be ignored.
 
-You have to print the output for first 105 operations. If program executes more than 105 operations then you have stop execution and print _"PROCESS TIME OUT. KILLED!!!"_ (without quotes) in the next line.
+You have to print the output for first 1e5 operations. If program executes more than 1e5 operations then you have stop execution and print _"PROCESS TIME OUT. KILLED!!!"_ (without quotes) in the next line.
 
 **NOTE:**
     1. Initally all memory locations contain 0. A location can store integer in range [0 .. 255].
