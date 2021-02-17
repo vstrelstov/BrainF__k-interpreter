@@ -22,12 +22,12 @@ Following are the commands used in this language:
 ```
 Each of the above command represents a single operation.
 
-*Objective:*
+**Objective:**
 Given a valid BrainF__k program and an input string, you have to print the result of the program when executed. All those characters of the program which does not represent a valid command can be considered as comment and should be ignored.
 
 You have to print the output for first 105 operations. If program executes more than 105 operations then you have stop execution and print _"PROCESS TIME OUT. KILLED!!!"_ (without quotes) in the next line.
 
-*NOTE:*
+**NOTE:**
     1. Initally all memory locations contain 0. A location can store integer in range [0 .. 255].
 
     2. At the start of program, data pointer is at memory location 0. It is guaranteed that data pointer will never point to a negative memory index during the execution of program.
@@ -36,20 +36,20 @@ You have to print the output for first 105 operations. If program executes more 
 
     4. Program will not have a mis-matched bracket ([ or ]).
 
-*Input*
+**Input**
 First line will contain two space separated integers, *n m*, which represent number of characters in input to BrainF__k program and number of lines in the program, respectively. Next line contains *n+1* characters which represents the input for the BrainF__k program. This line ends with character _'$'_ which represents the end of input and should be ignored. Then follows *m* lines which is the BrainF__k program.
 
-*Output*
+**Output**
 You have to print the output of program as mentioned in Objective. For programs with more than 1e5 operations, print the output till then followed by _"PROCESS TIME OUT. KILLED!!!"_ in the next line.
 
-*Constraints*
+**Constraints**
 ```
 0 <= n <= 150
 1 <= m <= 150
 ```
 Length of Brain__k program will not exceed 5000.
 
-*Sample input #0*
+**Sample input #0**
 
 ```
 0 20
@@ -77,13 +77,13 @@ $
 
 ```
 
-*Sample output #0*
+**Sample output #0**
 ```Hello world!```
 
-*Explanation*
+**Explanation**
 Here n = 0 means that there's no input to the BrainF__k program. That's why second line only contains _$_ which represents the end of input. Then follows m = 20 lines which represents the complete BrainF__k program. 
 
-*Sample input #1*
+**Sample input #1**
 
 ```
 6 6
@@ -97,14 +97,14 @@ abcxyz$
 
 ```
 
-*Sample output #1*
+**Sample output #1**
 
 ```bcdwxy```
 
-*Explanation*
+**Explanation**
 This program six characters, for first three it prints its successor and for rest its predecessor.
 
-*Sample input #2*
+**Sample input #2**
 
 ```
 2 10
@@ -122,11 +122,11 @@ pm$
 
 ```
 
-*Sample output #2*
+**Sample output #2**
 ```
 sp
 PROCESS TIME OUT. KILLED!!!
 ```
 
-*Explanation*
+**Explanation**
 Total number of operations executed here is 22 till second last line in program. Then it enters in a infinte loop in next line.
