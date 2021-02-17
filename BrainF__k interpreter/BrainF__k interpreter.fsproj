@@ -7,7 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="README.md" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
