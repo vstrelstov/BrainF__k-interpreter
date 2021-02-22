@@ -1,3 +1,7 @@
+This is my solution of "BrainF__k interpreter" problem from Hackerrank.
+
+**Problem:**
+
 BrainF__k is an esoteric programming languages. It is designed to provide a tongue-twister to programmers, where even adding two numbers can be more difficult than writing a complex algorithm in imperative languages.
 
 For this problem, a BrainF__k program is allocated a continuous memory of infinite bytes, where memory locations are indexed from 0 onwards.
