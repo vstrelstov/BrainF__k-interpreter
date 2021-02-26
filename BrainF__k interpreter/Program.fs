@@ -40,34 +40,36 @@ let main argv =
     // TODO: Probably use list instead of array. Keep in mind that memory length can be infinite
     let (memory: byte[]) = Array.zeroCreate maxOperationsCount 
     
-    let interpret tokens memory = 
+    let interpret tokens = 
         let tryTail list = 
             match list with
             | [] -> []
             | _::tail -> tail
 
         // TODO: Consider using of currying or partial application
-        let rec interpreterLoop tokens (memory: byte []) dataPointer input output =
+        // TODO: Add loops support
+        let rec interpreterLoop tokens dataPointer input output =
             match tokens with
             | [] -> output
-            | head::tail -> 
+            | head::tail ->
+                let partial = interpreterLoop tail
                 match head with
-                | Token.Next -> interpreterLoop tail memory (dataPointer + 1) input output
-                | Token.Previous -> interpreterLoop tail memory (dataPointer - 1) input output
+                | Token.Next -> partial (dataPointer + 1) input output
+                | Token.Previous -> partial (dataPointer - 1) input output
                 | Token.Inc -> 
                     memory.[dataPointer] <- (memory.[dataPointer] + 1uy)
-                    interpreterLoop tail memory dataPointer input output
+                    partial dataPointer input output
                 | Token.Dec -> 
                     memory.[dataPointer] <- (memory.[dataPointer] - 1uy)
-                    interpreterLoop tail memory dataPointer input output
+                    partial dataPointer input output
                 | Token.Read -> 
                     memory.[dataPointer] <- (List.head input |> byte)
-                    interpreterLoop tail memory dataPointer (tryTail input) output
-                | Token.Write -> interpreterLoop tail memory dataPointer input (Array.append output [|(memory.[dataPointer] |> char)|])
+                    partial dataPointer (tryTail input) output
+                | Token.Write -> partial dataPointer input (Array.append output [|(memory.[dataPointer] |> char)|])
 
-        interpreterLoop tokens memory 0 input [||]
+        interpreterLoop tokens 0 input [||]
 
-    let output = interpret tokens memory |> Array.map (fun c -> c.ToString()) |> String.concat ""
+    let output = interpret tokens |> Array.map (fun c -> c.ToString()) |> String.concat ""
     Console.WriteLine(output)
 
     0
