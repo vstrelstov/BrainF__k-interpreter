@@ -1,6 +1,6 @@
 ﻿open System
 
-type Token = 
+type Command = 
     | Next
     | Previous
     | Inc
@@ -17,26 +17,26 @@ let main argv =
     let linesNumber = (Console.ReadLine() |> (fun s -> s.Split [|' '|]) |> Array.map (int)).[1]
     let input = Console.ReadLine() |> (fun s -> s.TrimEnd('$')) |> Seq.toList
 
-    let rec getTokens currentLineNumber tokens = 
+    let rec getCommands currentLineNumber tokens = 
         let alphabet = [|'>'; '<'; '+'; '-'; ','; ','; '['; ']'|]
 
-        let getToken = function
-            | '<' -> Token.Previous
-            | '>' -> Token.Next
-            | '+' -> Token.Inc
-            | '-' -> Token.Dec
-            | '.' -> Token.Write
-            | ',' -> Token.Read
-            | '[' -> Token.LoopStart
-            | ']' -> Token.LoopEnd
+        let getCommand = function
+            | '<' -> Command.Previous
+            | '>' -> Command.Next
+            | '+' -> Command.Inc
+            | '-' -> Command.Dec
+            | '.' -> Command.Write
+            | ',' -> Command.Read
+            | '[' -> Command.LoopStart
+            | ']' -> Command.LoopEnd
 
         match currentLineNumber with
         | linesNumber -> tokens
         | _ -> 
-            let newTokens = Console.ReadLine() |> Seq.toList |> List.filter (fun c -> Array.contains c alphabet) |> List.map (fun c -> getToken c)
-            getTokens (currentLineNumber + 1) (tokens @ newTokens)
+            let newTokens = Console.ReadLine() |> Seq.toArray |> Array.filter (fun c -> Array.contains c alphabet) |> Array.map (fun c -> getCommand c)
+            getCommands (currentLineNumber + 1) (Array.append tokens newTokens)
 
-    let tokens = getTokens 1 []
+    let tokens = getCommands 1 [||]
     // TODO: Probably use list instead of array. Keep in mind that memory length can be infinite
     let (memory: byte[]) = Array.zeroCreate maxOperationsCount 
     
@@ -48,28 +48,26 @@ let main argv =
 
         // TODO: Consider using of currying or partial application
         // TODO: Add loops support
+        // TODO: Add operations count
         let rec interpreterLoop tokens dataPointer input output =
             match tokens with
             | [] -> output
             | head::tail ->
                 let partial = interpreterLoop tail
                 match head with
-                | Token.Next -> partial (dataPointer + 1) input output
-                | Token.Previous -> partial (dataPointer - 1) input output
-                | Token.Inc -> 
+                | Command.Next -> partial (dataPointer + 1) input output
+                | Command.Previous -> partial (dataPointer - 1) input output
+                | Command.Inc -> 
                     memory.[dataPointer] <- (memory.[dataPointer] + 1uy)
                     partial dataPointer input output
-                | Token.Dec -> 
+                | Command.Dec -> 
                     memory.[dataPointer] <- (memory.[dataPointer] - 1uy)
                     partial dataPointer input output
-                | Token.Read -> 
+                | Command.Read -> 
                     memory.[dataPointer] <- (List.head input |> byte)
                     partial dataPointer (tryTail input) output
-                | Token.Write -> partial dataPointer input (Array.append output [|(memory.[dataPointer] |> char)|])
+                | Command.Write -> partial dataPointer input (Array.append output [|(memory.[dataPointer] |> char)|])
 
         interpreterLoop tokens 0 input [||]
-
-    let output = interpret tokens |> Array.map (fun c -> c.ToString()) |> String.concat ""
-    Console.WriteLine(output)
 
     0
