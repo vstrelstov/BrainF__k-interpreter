@@ -39,41 +39,49 @@ let main argv =
         match currentLineNumber with
         | linesNumber -> tokens
         | _ -> 
-            let newTokens = Console.ReadLine() |> Seq.toArray |> Array.filter (fun c -> Array.contains c alphabet) |> Array.map (fun c -> getCommand c)
-            getCommands (currentLineNumber + 1) (Array.append tokens newTokens)
+            let newCommands = Console.ReadLine() |> Seq.toArray |> Array.filter (fun c -> Array.contains c alphabet) |> Array.map (fun c -> getCommand c)
+            getCommands (currentLineNumber + 1) (Array.append tokens newCommands)
 
-    let tokens = getCommands 1 [||]
-    // TODO: Probably use list instead of array. Keep in mind that memory length can be infinite
-    let (memory: byte[]) = Array.zeroCreate maxOperationsCount 
-    
-    let interpret tokens = 
-        let tryTail list = 
-            match list with
-            | [] -> []
-            | _::tail -> tail
+    // TODO: Consider using list instead of array. Keep in mind that memory length can be infinite 
+    let program = { Commands = (getCommands 1 [||]); Memory = Array.zeroCreate maxOperationsCount; }
 
-        // TODO: Consider using of currying or partial application
-        // TODO: Add loops support
-        // TODO: Add operations count
-        let rec interpreterLoop tokens dataPointer input output =
-            match tokens with
-            | [] -> output
-            | head::tail ->
-                let partial = interpreterLoop tail
-                match head with
-                | Command.Next -> partial (dataPointer + 1) input output
-                | Command.Previous -> partial (dataPointer - 1) input output
-                | Command.Inc -> 
-                    memory.[dataPointer] <- (memory.[dataPointer] + 1uy)
-                    partial dataPointer input output
-                | Command.Dec -> 
-                    memory.[dataPointer] <- (memory.[dataPointer] - 1uy)
-                    partial dataPointer input output
-                | Command.Read -> 
-                    memory.[dataPointer] <- (List.head input |> byte)
-                    partial dataPointer (tryTail input) output
-                | Command.Write -> partial dataPointer input (Array.append output [|(memory.[dataPointer] |> char)|])
+    let execute program =
+        let rec executionLoop opCount commandPointer dataPointer input = 
+            let nextIteration = executionLoop (opCount + 1)
+            let nextCommandBase = nextIteration (commandPointer + 1)
+            let nextCommand = nextCommandBase dataPointer
 
-        interpreterLoop tokens 0 input [||]
+            if opCount > maxOperationsCount then 
+                Console.WriteLine("\nPROCESS TIME OUT. KILLED!!!")    
+            elif commandPointer < ((Array.length program.Commands) - 1) then
+                let setDataPointer value = nextCommandBase (dataPointer + value) input
+                
+                let modifyMemoryCell modifyOperation = 
+                    program.Memory.[dataPointer] <- program.Memory.[dataPointer] |> modifyOperation
+                    nextCommand input
+
+                let read = 
+                    let tryTail list = 
+                        match list with
+                        | [] -> []
+                        | _::tail -> tail
+                    program.Memory.[dataPointer] <- (List.tryHead input).Value |> byte
+                    nextCommand (tryTail input)
+
+                let write = 
+                    Console.Write(program.Memory.[dataPointer] |> char)
+                    nextCommand input
+
+                match program.Commands.[commandPointer] with
+                | Command.Inc -> modifyMemoryCell ((+)1uy)
+                | Command.Dec -> modifyMemoryCell ((-)1uy)
+                | Command.Previous -> setDataPointer -1
+                | Command.Next -> setDataPointer 1
+                | Command.Read -> read
+                | Command.Write -> write
+
+        executionLoop 0 0 0 input
+
+    execute program
 
     0
