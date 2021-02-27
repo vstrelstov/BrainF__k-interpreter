@@ -10,6 +10,12 @@ type Command =
     | LoopStart
     | LoopEnd
 
+type BfProgram =
+    {
+        Commands: Command array;
+        Memory: byte array;
+    }
+
 let maxOperationsCount = int <| 1e5
 
 [<EntryPoint>]
