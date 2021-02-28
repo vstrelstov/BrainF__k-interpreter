@@ -72,6 +72,16 @@ let main argv =
                     Console.Write(program.Memory.[dataPointer] |> char)
                     nextCommand input
 
+                let jumpToLoopBound jumpToEnd = 
+                    let findMatchingLoop forwardSearch =
+                        let rec findMatchingLoopRec forwardSearch nestedCount =
+                            0 // Stub
+
+                        findMatchingLoopRec forwardSearch 0
+
+                    let newCmdPtr = findMatchingLoop jumpToEnd
+                    nextIteration newCmdPtr dataPointer input
+
                 match program.Commands.[commandPointer] with
                 | Command.Inc -> modifyMemoryCell ((+)1uy)
                 | Command.Dec -> modifyMemoryCell ((-)1uy)
@@ -79,6 +89,10 @@ let main argv =
                 | Command.Next -> setDataPointer 1
                 | Command.Read -> read
                 | Command.Write -> write
+                | Command.LoopStart ->
+                    if program.Memory.[dataPointer] = 0uy then jumpToLoopBound true else nextCommand input
+                | Command.LoopEnd ->
+                    if program.Memory.[dataPointer] <> 0uy then jumpToLoopBound false else nextCommand input
 
         executionLoop 0 0 0 input
 
