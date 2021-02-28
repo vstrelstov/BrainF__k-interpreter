@@ -53,7 +53,7 @@ let main argv =
 
             if opCount > maxOperationsCount then 
                 Console.WriteLine("\nPROCESS TIME OUT. KILLED!!!")    
-            elif commandPointer < ((Array.length program.Commands) - 1) then
+            elif commandPointer < (Array.length program.Commands) then
                 let setDataPointer value = nextCommandBase (dataPointer + value) input
                 
                 let modifyMemoryCell modifyOperation = 
