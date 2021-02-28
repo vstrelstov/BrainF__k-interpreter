@@ -74,7 +74,7 @@ let main argv =
                                 | y when y = decNestedCountCmd -> findMatchingLoopRec (moveCurrentCmdPtr currentCmdPtr) (nestedCount - 1)
                                 | _ -> findMatchingLoopRec (moveCurrentCmdPtr currentCmdPtr) nestedCount
 
-                        findMatchingLoopRec commandPointer 1
+                        findMatchingLoopRec commandPointer 0
 
                     let newCmdPtr = if jumpToEnd then findMatchingLoop Command.LoopStart Command.LoopEnd else findMatchingLoop Command.LoopEnd Command.LoopStart
                     nextIteration newCmdPtr dataPointer input
