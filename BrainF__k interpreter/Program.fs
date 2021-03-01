@@ -60,6 +60,18 @@ let main argv =
                     program.Memory.[dataPointer] <- program.Memory.[dataPointer] |> modifyOperation
                     nextCommand input
 
+                let read () =
+                    let tryTail list = 
+                        match list with
+                        | [] -> []
+                        | _::tail -> tail
+                    program.Memory.[dataPointer] <- (List.tryHead input).Value |> byte
+                    nextCommand (tryTail input)
+
+                let write () =
+                    Console.Write(program.Memory.[dataPointer] |> char)
+                    nextCommand input
+
                 let jumpToLoopBound jumpToEnd =
                     let findMatchingLoop incNestedCountCmd decNestedCountCmd =
                         let moveCurrentCmdPtr cmdPtr = if jumpToEnd then cmdPtr + 1 else cmdPtr - 1
@@ -84,16 +96,8 @@ let main argv =
                 | Command.Dec -> modifyMemoryCell ((-)1uy)
                 | Command.Previous -> setDataPointer -1
                 | Command.Next -> setDataPointer 1
-                | Command.Read ->
-                    let tryTail list = 
-                        match list with
-                        | [] -> []
-                        | _::tail -> tail
-                    program.Memory.[dataPointer] <- (List.tryHead input).Value |> byte
-                    nextCommand (tryTail input)
-                | Command.Write ->
-                    Console.Write(program.Memory.[dataPointer] |> char)
-                    nextCommand input
+                | Command.Read -> read ()
+                | Command.Write -> write ()
                 | Command.LoopStart ->
                     if program.Memory.[dataPointer] = 0uy then jumpToLoopBound true else nextCommand input
                 | Command.LoopEnd ->
