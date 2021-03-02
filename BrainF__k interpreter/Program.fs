@@ -72,24 +72,14 @@ let main argv =
                     Console.Write(program.Memory.[dataPointer] |> char)
                     nextCommand input
 
-                let jumpToLoopBound jumpToEnd =
-                    let findMatchingLoop incNestedCountCmd decNestedCountCmd =
-                        let moveCurrentCmdPtr cmdPtr = if jumpToEnd then cmdPtr + 1 else cmdPtr - 1
+                let jumpToLoopBound incNestedCommand decNestedCommand =
+                    let rec jumpToLoopBoundRec currentCmdPtr nestedCount =
+                        0
 
-                        let rec findMatchingLoopRec currentCmdPtr nestedCount =
-                            let currentCmd = program.Commands.[currentCmdPtr]
-                            if currentCmd = decNestedCountCmd && nestedCount = 1 then 
-                                currentCmdPtr
-                            else
-                                match currentCmd with
-                                | x when x = incNestedCountCmd -> findMatchingLoopRec (moveCurrentCmdPtr currentCmdPtr) (nestedCount + 1)
-                                | y when y = decNestedCountCmd -> findMatchingLoopRec (moveCurrentCmdPtr currentCmdPtr) (nestedCount - 1)
-                                | _ -> findMatchingLoopRec (moveCurrentCmdPtr currentCmdPtr) nestedCount
+                    jumpToLoopBoundRec commandPointer 0
 
-                        findMatchingLoopRec commandPointer 0
-
-                    let newCmdPtr = if jumpToEnd then findMatchingLoop Command.LoopStart Command.LoopEnd else findMatchingLoop Command.LoopEnd Command.LoopStart
-                    nextIteration newCmdPtr dataPointer input
+                let jmpToLoopStart = nextCommand input // Stub
+                let jmpToLoopEnd = nextCommand input// stub
 
                 match program.Commands.[commandPointer] with
                 | Command.Inc -> modifyMemoryCell ((+)1uy)
@@ -99,9 +89,9 @@ let main argv =
                 | Command.Read -> read ()
                 | Command.Write -> write ()
                 | Command.LoopStart ->
-                    if program.Memory.[dataPointer] = 0uy then jumpToLoopBound true else nextCommand input
+                    if program.Memory.[dataPointer] = 0uy then jmpToLoopStart else nextCommand input
                 | Command.LoopEnd ->
-                    if program.Memory.[dataPointer] <> 0uy then jumpToLoopBound false else nextCommand input
+                    if program.Memory.[dataPointer] <> 0uy then jmpToLoopEnd else nextCommand input
 
         executionLoop 0 0 0 input
 
