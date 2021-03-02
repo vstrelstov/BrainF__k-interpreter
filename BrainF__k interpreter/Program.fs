@@ -13,10 +13,10 @@ type Command =
 type BfProgram =
     {
         Commands: Command array;
-        Memory: byte array;
+        Memory: int array;
     }
 
-let maxOperationsCount = int <| 1e5
+let maxOperationsCount = 3000//int <| 1e5
 
 [<EntryPoint>]
 let main argv =
@@ -56,8 +56,8 @@ let main argv =
             elif commandPointer < (Array.length program.Commands) then
                 let setDataPointer value = nextCommandBase (dataPointer + value) input
                 
-                let modifyMemoryCell modifyOperation = 
-                    program.Memory.[dataPointer] <- program.Memory.[dataPointer] |> modifyOperation
+                let modifyMemoryCell increment = 
+                    program.Memory.[dataPointer] <- if increment then program.Memory.[dataPointer] + 1 else program.Memory.[dataPointer] - 1
                     nextCommand input
 
                 let read () =
@@ -65,43 +65,44 @@ let main argv =
                         match list with
                         | [] -> []
                         | _::tail -> tail
-                    program.Memory.[dataPointer] <- (List.tryHead input).Value |> byte
+                    program.Memory.[dataPointer] <- (List.tryHead input).Value |> int
                     nextCommand (tryTail input)
 
                 let write () =
                     Console.Write(program.Memory.[dataPointer] |> char)
                     nextCommand input
 
-                let jumpToLoopBound jumpToEnd =
-                    let findMatchingLoop incNestedCountCmd decNestedCountCmd =
-                        let moveCurrentCmdPtr cmdPtr = if jumpToEnd then cmdPtr + 1 else cmdPtr - 1
+                let jumpToLoopBound decNestedCommand incNestedCommand moveCmdPtrFunc =
+                    let rec jumpToLoopBoundRec currentCmdPtr nestedCount =
+                        let currentCommand = program.Commands.[currentCmdPtr]
+                        let jmp = currentCmdPtr + moveCmdPtrFunc
+                        if currentCommand = decNestedCommand && nestedCount = 1 then 
+                            currentCmdPtr
+                        else match currentCommand with 
+                            | x when x = decNestedCommand -> jumpToLoopBoundRec jmp (nestedCount - 1)
+                            | y when y = incNestedCommand -> jumpToLoopBoundRec jmp (nestedCount + 1)
+                            | _ -> jumpToLoopBoundRec jmp nestedCount
 
-                        let rec findMatchingLoopRec currentCmdPtr nestedCount =
-                            let currentCmd = program.Commands.[currentCmdPtr]
-                            if currentCmd = decNestedCountCmd && nestedCount = 1 then 
-                                currentCmdPtr
-                            else
-                                match currentCmd with
-                                | x when x = incNestedCountCmd -> findMatchingLoopRec (moveCurrentCmdPtr currentCmdPtr) (nestedCount + 1)
-                                | y when y = decNestedCountCmd -> findMatchingLoopRec (moveCurrentCmdPtr currentCmdPtr) (nestedCount - 1)
-                                | _ -> findMatchingLoopRec (moveCurrentCmdPtr currentCmdPtr) nestedCount
+                    jumpToLoopBoundRec commandPointer 0
 
-                        findMatchingLoopRec commandPointer 0
-
-                    let newCmdPtr = if jumpToEnd then findMatchingLoop Command.LoopStart Command.LoopEnd else findMatchingLoop Command.LoopEnd Command.LoopStart
-                    nextIteration newCmdPtr dataPointer input
+                let jmpToLoopStart() = 
+                    let newCommandPointer = jumpToLoopBound Command.LoopStart Command.LoopEnd  -1
+                    nextIteration newCommandPointer dataPointer input
+                let jmpToLoopEnd() = 
+                    let newCommandPointer = jumpToLoopBound Command.LoopEnd Command.LoopStart 1
+                    nextIteration newCommandPointer dataPointer input
 
                 match program.Commands.[commandPointer] with
-                | Command.Inc -> modifyMemoryCell ((+)1uy)
-                | Command.Dec -> modifyMemoryCell ((-)1uy)
+                | Command.Inc -> modifyMemoryCell true
+                | Command.Dec -> modifyMemoryCell false
                 | Command.Previous -> setDataPointer -1
                 | Command.Next -> setDataPointer 1
                 | Command.Read -> read ()
                 | Command.Write -> write ()
                 | Command.LoopStart ->
-                    if program.Memory.[dataPointer] = 0uy then jumpToLoopBound true else nextCommand input
+                    if program.Memory.[dataPointer] = 0 then jmpToLoopEnd () else nextCommand input
                 | Command.LoopEnd ->
-                    if program.Memory.[dataPointer] <> 0uy then jumpToLoopBound false else nextCommand input
+                    if program.Memory.[dataPointer] <> 0 then jmpToLoopStart () else nextCommand input
 
         executionLoop 0 0 0 input
 
