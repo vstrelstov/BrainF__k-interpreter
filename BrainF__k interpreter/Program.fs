@@ -13,10 +13,10 @@ type Command =
 type BfProgram =
     {
         Commands: Command array;
-        Memory: int array;
+        Memory: uint array;
     }
 
-let maxOperationsCount = 3000//int <| 1e5
+let maxOperationsCount = int <| 1e5
 
 [<EntryPoint>]
 let main argv =
@@ -57,7 +57,7 @@ let main argv =
                 let setDataPointer value = nextCommandBase (dataPointer + value) input
                 
                 let modifyMemoryCell increment = 
-                    program.Memory.[dataPointer] <- if increment then program.Memory.[dataPointer] + 1 else program.Memory.[dataPointer] - 1
+                    program.Memory.[dataPointer] <- if increment then program.Memory.[dataPointer] + 1u else program.Memory.[dataPointer] - 1u
                     nextCommand input
 
                 let read () =
@@ -65,7 +65,7 @@ let main argv =
                         match list with
                         | [] -> []
                         | _::tail -> tail
-                    program.Memory.[dataPointer] <- (List.tryHead input).Value |> int
+                    program.Memory.[dataPointer] <- (List.tryHead input).Value |> uint
                     nextCommand (tryTail input)
 
                 let write () =
@@ -100,9 +100,9 @@ let main argv =
                 | Command.Read -> read ()
                 | Command.Write -> write ()
                 | Command.LoopStart ->
-                    if program.Memory.[dataPointer] = 0 then jmpToLoopEnd () else nextCommand input
+                    if program.Memory.[dataPointer] = 0u then jmpToLoopEnd () else nextCommand input
                 | Command.LoopEnd ->
-                    if program.Memory.[dataPointer] <> 0 then jmpToLoopStart () else nextCommand input
+                    if program.Memory.[dataPointer] <> 0u then jmpToLoopStart () else nextCommand input
 
         executionLoop 0 0 0 input
 
