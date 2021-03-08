@@ -42,7 +42,6 @@ let main argv =
             let newCommands = Console.ReadLine() |> Seq.toArray |> Array.filter (fun c -> Array.contains c alphabet) |> Array.map (fun c -> getCommand c)
             getCommands (currentLineNumber + 1) (Array.append commands newCommands)
 
-    // TODO: Consider using list instead of array. Keep in mind that memory length can be infinite 
     let program = { Commands = (getCommands 1 [||]); Memory = Array.zeroCreate maxOperationsCount; }
 
     let execute program =
@@ -50,24 +49,17 @@ let main argv =
 
             if opCount > maxOperationsCount then 
                 Console.WriteLine("\nPROCESS TIME OUT. KILLED!!!")    
-            elif commandPointer < (Array.length program.Commands) then
-                let setDataPointer value = executionLoop (opCount + 1) (commandPointer + 1) (dataPointer + value) input
-                
+            elif commandPointer < (Array.length program.Commands) then               
                 let modifyMemoryCell increment = 
-                    program.Memory.[dataPointer] <- if increment then program.Memory.[dataPointer] + 1u else program.Memory.[dataPointer] - 1u
-                    executionLoop (opCount + 1) (commandPointer + 1) dataPointer input
+                    program.Memory.[dataPointer] <- 
+                        if increment then 
+                            program.Memory.[dataPointer] + 1u 
+                        else program.Memory.[dataPointer] - 1u
 
-                let read () =
-                    let tryTail list = 
-                        match list with
-                        | [] -> []
-                        | _::tail -> tail
-                    program.Memory.[dataPointer] <- (List.tryHead input).Value |> uint
-                    executionLoop (opCount + 1) (commandPointer + 1) dataPointer (tryTail input)
-
-                let write () =
-                    Console.Write(program.Memory.[dataPointer] |> char)
-                    executionLoop (opCount + 1) (commandPointer + 1) dataPointer input
+                let tryTail list = 
+                    match list with
+                    | [] -> []
+                    | _::tail -> tail
 
                 let jumpToLoopBound decNestedCommand incNestedCommand moveCmdPtrFunc =
                     let rec jumpToLoopBoundRec currentCmdPtr nestedCount =
@@ -82,24 +74,35 @@ let main argv =
 
                     jumpToLoopBoundRec commandPointer 0
 
-                let jmpToLoopStart() = 
-                    let newCommandPointer = jumpToLoopBound Command.LoopStart Command.LoopEnd  -1
-                    executionLoop (opCount + 1) newCommandPointer dataPointer input
-                let jmpToLoopEnd() = 
-                    let newCommandPointer = jumpToLoopBound Command.LoopEnd Command.LoopStart 1
-                    executionLoop (opCount + 1) newCommandPointer dataPointer input
-
                 match program.Commands.[commandPointer] with
-                | Command.Inc -> modifyMemoryCell true
-                | Command.Dec -> modifyMemoryCell false
-                | Command.Previous -> setDataPointer -1
-                | Command.Next -> setDataPointer 1
-                | Command.Read -> read ()
-                | Command.Write -> write ()
+                | Command.Inc -> 
+                    modifyMemoryCell true
+                    executionLoop (opCount + 1) (commandPointer + 1) dataPointer input
+                | Command.Dec -> 
+                    modifyMemoryCell false
+                    executionLoop (opCount + 1) (commandPointer + 1) dataPointer input
+                | Command.Previous -> 
+                    executionLoop (opCount + 1) (commandPointer + 1) (dataPointer - 1) input
+                | Command.Next -> 
+                    executionLoop (opCount + 1) (commandPointer + 1) (dataPointer + 1) input
+                | Command.Read ->
+                    program.Memory.[dataPointer] <- (List.tryHead input).Value |> uint
+                    executionLoop (opCount + 1) (commandPointer + 1) dataPointer (tryTail input)
+                | Command.Write ->
+                    Console.Write(program.Memory.[dataPointer] |> char)
+                    executionLoop (opCount + 1) (commandPointer + 1) dataPointer input
                 | Command.LoopStart ->
-                    if program.Memory.[dataPointer] = 0u then jmpToLoopEnd () else executionLoop (opCount + 1) (commandPointer + 1) dataPointer input
+                    if program.Memory.[dataPointer] = 0u then 
+                        let newCommandPointer = jumpToLoopBound Command.LoopEnd Command.LoopStart 1
+                        executionLoop (opCount + 1) newCommandPointer dataPointer input
+                    else 
+                        executionLoop (opCount + 1) (commandPointer + 1) dataPointer input
                 | Command.LoopEnd ->
-                    if program.Memory.[dataPointer] <> 0u then jmpToLoopStart () else executionLoop (opCount + 1) (commandPointer + 1) dataPointer input
+                    if program.Memory.[dataPointer] <> 0u then 
+                        let newCommandPointer = jumpToLoopBound Command.LoopStart Command.LoopEnd  -1
+                        executionLoop (opCount + 1) newCommandPointer dataPointer input
+                    else 
+                        executionLoop (opCount + 1) (commandPointer + 1) dataPointer input
 
         executionLoop 0 0 0 input
 
