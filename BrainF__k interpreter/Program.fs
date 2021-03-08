@@ -13,13 +13,12 @@ type Command =
 type BfProgram =
     {
         Commands: Command array;
-        Memory: uint array;
+        Memory: uint8 array;
     }
-
-let maxOperationsCount = int <| 1e5
 
 [<EntryPoint>]
 let main argv =
+    let maxOperationsCount = int <| 1e5
     let linesNumber = (Console.ReadLine() |> (fun s -> s.Split [|' '|]) |> Array.map (int)).[1]
     let input = Console.ReadLine() |> (fun s -> s.TrimEnd('$')) |> Seq.toList
 
@@ -42,7 +41,7 @@ let main argv =
             let newCommands = Console.ReadLine() |> Seq.toArray |> Array.filter (fun c -> Array.contains c alphabet) |> Array.map (fun c -> getCommand c)
             getCommands (currentLineNumber + 1) (Array.append commands newCommands)
 
-    let program = { Commands = (getCommands 1 [||]); Memory = Array.zeroCreate maxOperationsCount; }
+    let program = { Commands = (getCommands 1 [||]); Memory = Array.zeroCreate (int <| 3e4); } // Standard memory size for the most implementations
 
     let execute program =
         let rec executionLoop opCount commandPointer dataPointer input =
@@ -53,8 +52,8 @@ let main argv =
                 let modifyMemoryCell increment = 
                     program.Memory.[dataPointer] <- 
                         if increment then 
-                            program.Memory.[dataPointer] + 1u 
-                        else program.Memory.[dataPointer] - 1u
+                            program.Memory.[dataPointer] + (uint8 <| 1)
+                        else program.Memory.[dataPointer] - (uint8 <| 1)
 
                 let tryTail list = 
                     match list with
@@ -86,19 +85,19 @@ let main argv =
                 | Command.Next -> 
                     executionLoop (opCount + 1) (commandPointer + 1) (dataPointer + 1) input
                 | Command.Read ->
-                    program.Memory.[dataPointer] <- (List.tryHead input).Value |> uint
+                    program.Memory.[dataPointer] <- (List.tryHead input).Value |> uint8
                     executionLoop (opCount + 1) (commandPointer + 1) dataPointer (tryTail input)
                 | Command.Write ->
                     Console.Write(program.Memory.[dataPointer] |> char)
                     executionLoop (opCount + 1) (commandPointer + 1) dataPointer input
                 | Command.LoopStart ->
-                    if program.Memory.[dataPointer] = 0u then 
+                    if program.Memory.[dataPointer] = (uint8 <| 0) then 
                         let newCommandPointer = jumpToLoopBound Command.LoopEnd Command.LoopStart 1
                         executionLoop (opCount + 1) newCommandPointer dataPointer input
                     else 
                         executionLoop (opCount + 1) (commandPointer + 1) dataPointer input
                 | Command.LoopEnd ->
-                    if program.Memory.[dataPointer] <> 0u then 
+                    if program.Memory.[dataPointer] <> (uint8 <| 0) then 
                         let newCommandPointer = jumpToLoopBound Command.LoopStart Command.LoopEnd  -1
                         executionLoop (opCount + 1) newCommandPointer dataPointer input
                     else 
