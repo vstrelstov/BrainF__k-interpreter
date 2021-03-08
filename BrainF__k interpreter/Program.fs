@@ -47,7 +47,7 @@ let main argv =
 
     let execute program =
         let rec executionLoop opCount commandPointer dataPointer input =
-            printfn "%i" opCount
+
             if opCount > maxOperationsCount then 
                 Console.WriteLine("\nPROCESS TIME OUT. KILLED!!!")    
             elif commandPointer < (Array.length program.Commands) then
