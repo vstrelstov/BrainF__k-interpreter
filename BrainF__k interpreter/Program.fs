@@ -46,19 +46,16 @@ let main argv =
     let program = { Commands = (getCommands 1 [||]); Memory = Array.zeroCreate maxOperationsCount; }
 
     let execute program =
-        let rec executionLoop opCount commandPointer dataPointer input = 
-            let nextIteration = executionLoop (opCount + 1)
-            let nextCommandBase = nextIteration (commandPointer + 1)
-            let nextCommand = nextCommandBase dataPointer
+        let rec executionLoop opCount commandPointer dataPointer input =
 
             if opCount > maxOperationsCount then 
                 Console.WriteLine("\nPROCESS TIME OUT. KILLED!!!")    
             elif commandPointer < (Array.length program.Commands) then
-                let setDataPointer value = nextCommandBase (dataPointer + value) input
+                let setDataPointer value = executionLoop (opCount + 1) (commandPointer + 1) (dataPointer + value) input
                 
                 let modifyMemoryCell increment = 
                     program.Memory.[dataPointer] <- if increment then program.Memory.[dataPointer] + 1u else program.Memory.[dataPointer] - 1u
-                    nextCommand input
+                    executionLoop (opCount + 1) (commandPointer + 1) dataPointer input
 
                 let read () =
                     let tryTail list = 
@@ -66,11 +63,11 @@ let main argv =
                         | [] -> []
                         | _::tail -> tail
                     program.Memory.[dataPointer] <- (List.tryHead input).Value |> uint
-                    nextCommand (tryTail input)
+                    executionLoop (opCount + 1) (commandPointer + 1) dataPointer (tryTail input)
 
                 let write () =
                     Console.Write(program.Memory.[dataPointer] |> char)
-                    nextCommand input
+                    executionLoop (opCount + 1) (commandPointer + 1) dataPointer input
 
                 let jumpToLoopBound decNestedCommand incNestedCommand moveCmdPtrFunc =
                     let rec jumpToLoopBoundRec currentCmdPtr nestedCount =
@@ -87,10 +84,10 @@ let main argv =
 
                 let jmpToLoopStart() = 
                     let newCommandPointer = jumpToLoopBound Command.LoopStart Command.LoopEnd  -1
-                    nextIteration newCommandPointer dataPointer input
+                    executionLoop (opCount + 1) newCommandPointer dataPointer input
                 let jmpToLoopEnd() = 
                     let newCommandPointer = jumpToLoopBound Command.LoopEnd Command.LoopStart 1
-                    nextIteration newCommandPointer dataPointer input
+                    executionLoop (opCount + 1) newCommandPointer dataPointer input
 
                 match program.Commands.[commandPointer] with
                 | Command.Inc -> modifyMemoryCell true
@@ -100,9 +97,9 @@ let main argv =
                 | Command.Read -> read ()
                 | Command.Write -> write ()
                 | Command.LoopStart ->
-                    if program.Memory.[dataPointer] = 0u then jmpToLoopEnd () else nextCommand input
+                    if program.Memory.[dataPointer] = 0u then jmpToLoopEnd () else executionLoop (opCount + 1) (commandPointer + 1) dataPointer input
                 | Command.LoopEnd ->
-                    if program.Memory.[dataPointer] <> 0u then jmpToLoopStart () else nextCommand input
+                    if program.Memory.[dataPointer] <> 0u then jmpToLoopStart () else executionLoop (opCount + 1) (commandPointer + 1) dataPointer input
 
         executionLoop 0 0 0 input
 
