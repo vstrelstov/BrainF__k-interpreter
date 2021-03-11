@@ -88,7 +88,8 @@ let main argv =
                     program.Memory.[dataPointer] <- (List.tryHead input).Value |> uint8
                     executionLoop (opCount + 1) (commandPointer + 1) dataPointer (tryTail input)
                 | Command.Write ->
-                    Console.Write(program.Memory.[dataPointer] |> char)
+                    if opCount < maxOperationsCount then
+                        Console.Write(program.Memory.[dataPointer] |> char)
                     executionLoop (opCount + 1) (commandPointer + 1) dataPointer input
                 | Command.LoopStart ->
                     if program.Memory.[dataPointer] = (uint8 <| 0) then 
