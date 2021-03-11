@@ -1,7 +1,7 @@
 55 60
 Conqueror of British Empire (CWE). All hail Idi Amin!!!$
-This will contain excatly 10^5 operations
-Expected output: 
+This will contain exactly 10^5 operations
+Expected output:
 Co
 +++++
 [>

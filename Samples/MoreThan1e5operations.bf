@@ -1,7 +1,7 @@
 55 59
 Conqueror of British Empire (CWE). All hail Idi Amin!!!$
-This will contain excatly 100001 operations
-Should result into proess kill
+This will contain exactly (10^5) + 1 operations
+Should result into process kill
 +++++
 [>
     ++++++++
