@@ -41,7 +41,7 @@ let main argv =
             let newCommands = Console.ReadLine() |> Seq.toArray |> Array.filter (fun c -> Array.contains c alphabet) |> Array.map (fun c -> getCommand c)
             getCommands (currentLineNumber + 1) (Array.append commands newCommands)
 
-    let program = { Commands = (getCommands 1 [||]); Memory = Array.zeroCreate (int <| 3e4); } // Standard memory size for the most implementations
+    let program = { Commands = (getCommands 1 [||]); Memory = Array.zeroCreate (int <| 3e4); } // Standard memory size for most implementations
 
     let execute program =
         let rec executionLoop opCount commandPointer dataPointer input =
